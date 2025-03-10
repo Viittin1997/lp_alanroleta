@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32px" height="32px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <title>Dice Favicon</title>
+    <g id="Dice" fill="none" stroke="none">
+        <rect id="Background" fill="#e60000" x="2" y="2" width="28" height="28" rx="4"></rect>
+        <circle id="Dot1" fill="#FFFFFF" cx="8" cy="8" r="2.5"></circle>
+        <circle id="Dot2" fill="#FFFFFF" cx="16" cy="16" r="2.5"></circle>
+        <circle id="Dot3" fill="#FFFFFF" cx="24" cy="24" r="2.5"></circle>
+        <circle id="Dot4" fill="#FFFFFF" cx="8" cy="24" r="2.5"></circle>
+        <circle id="Dot5" fill="#FFFFFF" cx="24" cy="8" r="2.5"></circle>
+    </g>
+</svg>
