@@ -67,7 +67,7 @@ function trackButtonClicks() {
             console.log('Enviando dados para o n8n:', data);
             
             // Endpoint do n8n
-            const n8nEndpoint = 'https://edtn8n.meumenu2023.uk/webhook-test/fbclid-landingpage';
+            const n8nEndpoint = 'https://whkn8n.meumenu2023.uk/webhook/fbclid-landingpage';
             
             // Enviar dados para o n8n via POST
             fetch(n8nEndpoint, {
@@ -76,6 +76,7 @@ function trackButtonClicks() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(data),
+                mode: 'no-cors'
             })
             .then(response => {
                 console.log('Resposta do n8n:', response.status);
