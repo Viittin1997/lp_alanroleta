@@ -1,23 +1,12 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar dataLayer para GTM se ainda não existir
+    // Inicializar dataLayer para GTM
     window.dataLayer = window.dataLayer || [];
-    
-    // Registrar evento de visualização de página no GTM
-    dataLayer.push({
-        'event': 'pageView',
-        'pageName': 'Alan Roleta Landing Page',
-        'pageType': 'landing_page'
-    });
-    
-    console.log('GTM: Evento pageView enviado');
     
     // Animações básicas e interatividade
     initBasicAnimations();
     
     // Tracking de eventos
     trackButtonClicks();
-    
-    console.log('Script inicializado com sucesso');
 });
 
 // Inicializar animações básicas
@@ -60,29 +49,12 @@ function trackButtonClicks() {
             // URL de destino do Telegram
             const telegramUrl = this.getAttribute('href');
             
-            // Rastrear evento de clique no Facebook Pixel
+            // Rastrear evento de clique no Facebook Pixel (Lead)
             if (typeof fbq === 'function') {
                 fbq('track', 'Lead', {
                     content_name: 'Alan Roleta - Grupo de Lives',
-                    content_category: 'Telegram Subscription',
-                    pixel_id: '953511639762298'
+                    content_category: 'Telegram Subscription'
                 });
-                console.log('Evento de Lead registrado no Facebook Pixel');
-            } else {
-                console.warn('Facebook Pixel não está disponível');
-            }
-            
-            // Rastrear evento de clique no Google Tag Manager
-            if (window.dataLayer) {
-                dataLayer.push({
-                    'event': 'telegramClick',
-                    'eventCategory': 'Engagement',
-                    'eventAction': 'Click',
-                    'eventLabel': 'Telegram Button'
-                });
-                console.log('GTM: Evento telegramClick enviado');
-            } else {
-                console.warn('Google Tag Manager dataLayer não está disponível');
             }
             
             // Obter o parâmetro fbclid da URL
@@ -91,107 +63,37 @@ function trackButtonClicks() {
             // Dados para enviar ao n8n
             const data = {
                 expert: 'alanroleta',
-                fbclid: fbclid || 'sem_fbclid'
+                fbclid: fbclid
             };
-            
-            console.log('Enviando dados para o n8n:', data);
             
             // Endpoint do n8n
             const n8nEndpoint = 'https://whkn8n.meumenu2023.uk/webhook/fbclid-landingpage';
             
-            // Enviar dados para o n8n via POST com modo no-cors para evitar problemas de CORS
-            fetch(n8nEndpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify(data),
-                mode: 'no-cors' // Isso permite que a requisição seja enviada mesmo com restrições de CORS
-            })
-            .then(response => {
-                // Como estamos usando mode: 'no-cors', a resposta será do tipo 'opaque'
-                // e não podemos acessar o status ou o corpo da resposta
-                console.log('Resposta recebida do n8n (opaque response devido ao modo no-cors)');
-                
-                // Registrar evento de conversão bem-sucedida no GTM
-                if (window.dataLayer) {
-                    dataLayer.push({
-                        'event': 'webhookSuccess',
-                        'eventCategory': 'Conversion',
-                        'eventAction': 'Webhook',
-                        'eventLabel': 'Success'
-                    });
-                    console.log('GTM: Evento webhookSuccess enviado');
-                }
-                
-                // Redirecionar para o Telegram após o envio dos dados
-                setTimeout(() => {
-                    console.log('Redirecionando para:', telegramUrl);
+            // Enviar dados para o n8n via POST apenas se houver fbclid
+            if (fbclid) {
+                fetch(n8nEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                    mode: 'no-cors'
+                })
+                .then(response => {
+                    // Redirecionar para o Telegram após o envio dos dados
                     window.location.href = telegramUrl;
-                }, 300); // Pequeno atraso para garantir que o log seja exibido
-            })
-            .catch(error => {
-                // Em caso de erro, redirecionar mesmo assim
-                console.error('Erro ao enviar dados:', error);
-                
-                // Registrar evento de erro no GTM
-                if (window.dataLayer) {
-                    dataLayer.push({
-                        'event': 'webhookError',
-                        'eventCategory': 'Error',
-                        'eventAction': 'Webhook',
-                        'eventLabel': error.message || 'Unknown Error'
-                    });
-                    console.log('GTM: Evento webhookError enviado');
-                }
-                
-                // Tentar uma abordagem alternativa com XMLHttpRequest
-                console.log('Tentando método alternativo com XMLHttpRequest...');
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', n8nEndpoint, true);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                
-                xhr.onload = function() {
-                    console.log('XMLHttpRequest concluído com status:', xhr.status);
-                    
-                    // Registrar evento de sucesso alternativo no GTM
-                    if (window.dataLayer) {
-                        dataLayer.push({
-                            'event': 'webhookSuccessXHR',
-                            'eventCategory': 'Conversion',
-                            'eventAction': 'WebhookXHR',
-                            'eventLabel': 'Success'
-                        });
-                    }
-                    
+                })
+                .catch(error => {
+                    // Em caso de erro, redirecionar mesmo assim
                     window.location.href = telegramUrl;
-                };
-                
-                xhr.onerror = function() {
-                    console.error('Erro no XMLHttpRequest');
-                    
-                    // Registrar evento de erro alternativo no GTM
-                    if (window.dataLayer) {
-                        dataLayer.push({
-                            'event': 'webhookErrorXHR',
-                            'eventCategory': 'Error',
-                            'eventAction': 'WebhookXHR',
-                            'eventLabel': 'Network Error'
-                        });
-                    }
-                    
-                    window.location.href = telegramUrl;
-                };
-                
-                xhr.send(JSON.stringify(data));
-            });
+                });
+            } else {
+                // Se não houver fbclid, apenas redirecionar para o Telegram
+                window.location.href = telegramUrl;
+            }
         });
     });
 }
-
-// Detectar se o usuário está em um dispositivo móvel
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
 // Adicionar CSS para animações
 document.head.insertAdjacentHTML('beforeend', `
