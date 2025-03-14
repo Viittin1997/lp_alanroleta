@@ -38,6 +38,34 @@ function getUrlParameter(name) {
     return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 }
 
+// Função para obter todos os parâmetros da URL de uma vez
+function getAllUrlParameters() {
+    const params = {};
+    const queryString = window.location.search.substring(1);
+    
+    if (queryString) {
+        console.log('Query string encontrada:', queryString);
+        const pairs = queryString.split('&');
+        
+        for (let i = 0; i < pairs.length; i++) {
+            const pair = pairs[i].split('=');
+            const key = decodeURIComponent(pair[0]);
+            const value = pair.length > 1 ? decodeURIComponent(pair[1]) : '';
+            
+            // Verificar especificamente parâmetros UTM e fbclid para logging
+            if (key.startsWith('utm_') || key === 'fbclid') {
+                console.log(`Parâmetro encontrado: ${key}=${value}`);
+            }
+            
+            params[key] = value;
+        }
+    } else {
+        console.log('Nenhum parâmetro encontrado na URL');
+    }
+    
+    return params;
+}
+
 // Rastrear cliques nos botões e enviar dados para o n8n antes de redirecionar
 function trackButtonClicks() {
     const ctaButtons = document.querySelectorAll('.cta-button');
@@ -57,40 +85,57 @@ function trackButtonClicks() {
                 });
             }
             
-            // Obter o parâmetro fbclid da URL
-            const fbclid = getUrlParameter('fbclid');
+            // Obter todos os parâmetros da URL de uma vez
+            const params = getAllUrlParameters();
             
             // Dados para enviar ao n8n
             const data = {
-                expert: 'alanroleta',
-                fbclid: fbclid
+                expert: 'alanroleta'
             };
+            
+            // Adicionar todos os parâmetros da URL ao objeto data
+            // Usar um método mais direto para garantir que todos os parâmetros sejam incluídos
+            for (const key in params) {
+                if (params.hasOwnProperty(key)) {
+                    data[key] = params[key];
+                    console.log(`Adicionando parâmetro ao objeto de dados: ${key}=${params[key]}`);
+                }
+            }
+            
+            console.log('Dados para enviar ao n8n:', data);
             
             // Endpoint do n8n
             const n8nEndpoint = 'https://whkn8n.meumenu2023.uk/webhook/fbclid-landingpage';
             
-            // Enviar dados para o n8n via POST apenas se houver fbclid
-            if (fbclid) {
+            // Enviar dados para o n8n via POST
+            // Converter para string JSON e registrar no console para depuração
+            const jsonData = JSON.stringify(data);
+            console.log('JSON a ser enviado:', jsonData);
+            
+            // Função para tentar novamente o envio em caso de falha
+            const sendData = () => {
                 fetch(n8nEndpoint, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'text/plain;charset=UTF-8',
                     },
-                    body: JSON.stringify(data),
+                    body: jsonData,
                     mode: 'no-cors'
                 })
                 .then(response => {
+                    console.log('Dados enviados com sucesso para o n8n');
                     // Redirecionar para o Telegram após o envio dos dados
                     window.location.href = telegramUrl;
                 })
                 .catch(error => {
+                    console.error('Erro ao enviar dados para o n8n:', error);
                     // Em caso de erro, redirecionar mesmo assim
                     window.location.href = telegramUrl;
                 });
-            } else {
-                // Se não houver fbclid, apenas redirecionar para o Telegram
-                window.location.href = telegramUrl;
-            }
+            };
+            
+            // Enviar dados para o n8n, independentemente de ter fbclid ou não
+            sendData();
         });
     });
 }
